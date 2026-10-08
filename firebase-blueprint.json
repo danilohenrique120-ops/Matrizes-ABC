@@ -1,0 +1,37 @@
+{
+  "entities": {
+    "WcmPlant": {
+      "collection": "wcm_plants",
+      "fields": {
+        "processes": {
+          "type": "array",
+          "description": "Lista de áreas e equipamentos da fábrica"
+        },
+        "lossCategories": {
+          "type": "array",
+          "description": "Lista de perdas WCM mapeadas"
+        },
+        "rootCauses": {
+          "type": "array",
+          "description": "Lista de causas raiz mapeadas"
+        },
+        "matrixAValues": {
+          "type": "array",
+          "description": "Valores de criticidade e perdas da Matriz A"
+        },
+        "matrixBValues": {
+          "type": "array",
+          "description": "Correlações da Matriz B"
+        },
+        "financialParams": {
+          "type": "map",
+          "description": "Parâmetros de custos financeiros da planta"
+        },
+        "updatedAt": {
+          "type": "timestamp",
+          "description": "Data e hora da última atualização"
+        }
+      }
+    }
+  }
+}

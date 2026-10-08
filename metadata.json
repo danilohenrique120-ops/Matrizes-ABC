@@ -1,0 +1,6 @@
+{
+  "name": "WCM Cost Deployment System",
+  "description": "Sistema de Gestão e Operacionalização do Pilar de Cost Deployment (CD) do World Class Manufacturing com Matrizes A, B e C interconectadas em tempo real e Análise de Pareto.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
