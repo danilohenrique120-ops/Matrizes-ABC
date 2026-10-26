@@ -127,12 +127,11 @@ export const IntegratedMatrixBCView: React.FC<IntegratedMatrixBCViewProps> = ({
     if (Array.isArray(currentDeployment.costElements)) {
       return currentDeployment.costElements;
     }
-    // Default fallback elements: For demo dep_1, keep 85 and 0.95 so it matches screenshot; if other/new, starts at 0
     return [
       {
         id: 'elem_mo',
         name: 'Custo Mão de Obra',
-        rate: currentDeployment.id === 'dep_1' ? 85 : 0,
+        rate: hourlyLaborRate,
         unit: 'reais_hora',
         unitDetail: 'R$/hora por operador',
         isActive: true,
@@ -140,13 +139,13 @@ export const IntegratedMatrixBCView: React.FC<IntegratedMatrixBCViewProps> = ({
       {
         id: 'elem_ee',
         name: 'Custo Energia Elétrica',
-        rate: currentDeployment.id === 'dep_1' ? 0.95 : 0,
+        rate: electricityRate,
         unit: 'reais_hora',
         unitDetail: 'R$/hora processo',
         isActive: true,
       },
     ];
-  }, [currentDeployment]);
+  }, [currentDeployment, hourlyLaborRate, electricityRate]);
 
   // Helper to compute cost for a single element in a single stage
   const getStageElementCost = (
@@ -1833,18 +1832,70 @@ export const IntegratedMatrixBCView: React.FC<IntegratedMatrixBCViewProps> = ({
                   let depLabor = 0;
                   let depEnergy = 0;
 
+                  const hasCustomElements = Array.isArray(dep.costElements);
+                  const depLaborElement = hasCustomElements
+                    ? dep.costElements?.find(
+                        (e) =>
+                          e.isActive !== false &&
+                          e.unit === 'reais_hora' &&
+                          (e.name.toLowerCase().includes('mão de obra') ||
+                            (e.unitDetail && e.unitDetail.includes('operador')))
+                      )
+                    : null;
+                  const depLaborRate =
+                    depLaborElement !== undefined && depLaborElement !== null
+                      ? depLaborElement.rate
+                      : hasCustomElements
+                      ? 0
+                      : hourlyLaborRate;
+
+                  const depEnergyElement = hasCustomElements
+                    ? dep.costElements?.find(
+                        (e) =>
+                          e.isActive !== false &&
+                          e.unit === 'reais_hora' &&
+                          e.name.toLowerCase().includes('energia')
+                      )
+                    : null;
+                  const depEnergyRate =
+                    depEnergyElement !== undefined && depEnergyElement !== null
+                      ? depEnergyElement.rate
+                      : hasCustomElements
+                      ? 0
+                      : electricityRate;
+
+                  const otherHourlyElements = hasCustomElements
+                    ? (dep.costElements || []).filter(
+                        (e) =>
+                          e.isActive !== false &&
+                          e.unit === 'reais_hora' &&
+                          e.id !== depLaborElement?.id &&
+                          e.id !== depEnergyElement?.id
+                      )
+                    : [];
+
+                  const depFixedCost = hasCustomElements
+                    ? (dep.costElements || [])
+                        .filter((e) => e.isActive !== false && e.unit === 'reais_fixo')
+                        .reduce((sum, el) => sum + (Number(el.rate) || 0), 0)
+                    : 0;
+
                   (dep.impactedStages || []).forEach((stg) => {
                     const isStop = stg.isStop !== false;
                     const dur = isStop ? Number(stg.durationHours || 0) : 0;
                     const ops = isStop ? Number(stg.operatorCount || 1) : 0;
-                    const energyRate = stg.customEnergyRatePerHour ?? electricityRate;
+                    const energyRate = stg.customEnergyRatePerHour ?? depEnergyRate;
+                    const otherHourly = otherHourlyElements.reduce(
+                      (acc, el) => acc + dur * (Number(el.rate) || 0),
+                      0
+                    );
 
                     depHours += dur;
-                    depLabor += dur * ops * hourlyLaborRate;
-                    depEnergy += dur * energyRate;
+                    depLabor += dur * ops * depLaborRate;
+                    depEnergy += dur * energyRate + otherHourly;
                   });
 
-                  const depTotal = depLabor + depEnergy;
+                  const depTotal = depLabor + depEnergy + depFixedCost;
 
                   return (
                     <tr

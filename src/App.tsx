@@ -81,6 +81,34 @@ export default function App() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [selectedProcessId, setSelectedProcessId] = useState<string>('');
 
+  // Helper to guarantee that all standard WCM losses and their Matrix A cells exist in any dataset
+  const mergeWithStandardWcmData = (currentLosses: LossCategory[], currentMatrixA: MatrixACell[]) => {
+    const existingLossIdSet = new Set((currentLosses || []).map((l) => l.id));
+    const mergedLosses = [...(currentLosses || [])];
+
+    // Append any standard losses that are not present
+    for (const stdLoss of INITIAL_LOSS_CATEGORIES) {
+      if (!existingLossIdSet.has(stdLoss.id)) {
+        mergedLosses.push(stdLoss);
+        existingLossIdSet.add(stdLoss.id);
+      }
+    }
+
+    // Ensure Matrix A has values for all cells
+    const existingCellKeys = new Set((currentMatrixA || []).map((c) => `${c.processId}_${c.lossId}`));
+    const mergedMatrixA = [...(currentMatrixA || [])];
+
+    for (const stdCell of INITIAL_MATRIX_A_VALUES) {
+      const key = `${stdCell.processId}_${stdCell.lossId}`;
+      if (!existingCellKeys.has(key)) {
+        mergedMatrixA.push(stdCell);
+        existingCellKeys.add(key);
+      }
+    }
+
+    return { losses: mergedLosses, matrixA: mergedMatrixA };
+  };
+
   // Helper to load plant data from LocalStorage for any plant ID
   const loadPlantFromStorage = (plantId: string) => {
     const isDefault = plantId === DEFAULT_PLANT_DOC_ID;
@@ -92,6 +120,7 @@ export default function App() {
     let mb = INITIAL_MATRIX_B_VALUES;
     let cd = INITIAL_CAUSAL_DEPLOYMENTS;
     let fp = INITIAL_FINANCIAL_PARAMS;
+    let lastUpdatedISO: string | null = null;
 
     try {
       const savedP = localStorage.getItem(`${STORAGE_KEY}_${prefix}PROCESSES`) || (isDefault ? localStorage.getItem(`${STORAGE_KEY}_PROCESSES`) : null);
@@ -114,11 +143,20 @@ export default function App() {
 
       const savedFP = localStorage.getItem(`${STORAGE_KEY}_${prefix}FIN_PARAMS`) || (isDefault ? localStorage.getItem(`${STORAGE_KEY}_FIN_PARAMS`) : null);
       if (savedFP) fp = JSON.parse(savedFP);
+
+      lastUpdatedISO =
+        localStorage.getItem(`${STORAGE_KEY}_${prefix}LAST_UPDATED_ISO`) ||
+        (isDefault ? localStorage.getItem(`${STORAGE_KEY}_LAST_UPDATED_ISO`) : null);
     } catch (e) {
       console.warn('Error reading from localStorage cache:', e);
     }
 
-    return { p, l, r, ma, mb, cd, fp };
+    // Merge to guarantee all 58 new WCM losses are available
+    const merged = mergeWithStandardWcmData(l, ma);
+    l = merged.losses;
+    ma = merged.matrixA;
+
+    return { p, l, r, ma, mb, cd, fp, lastUpdatedISO };
   };
 
   // Helper to persist plant data to LocalStorage
@@ -132,6 +170,7 @@ export default function App() {
       matrixB: MatrixBCell[];
       causalDeployments: CausalDeployment[];
       financialParams: FinancialParameters;
+      lastUpdatedISO?: string;
     }
   ) => {
     const isDefault = plantId === DEFAULT_PLANT_DOC_ID;
@@ -144,6 +183,9 @@ export default function App() {
       localStorage.setItem(`${STORAGE_KEY}_${prefix}MATRIX_B`, JSON.stringify(data.matrixB));
       localStorage.setItem(`${STORAGE_KEY}_${prefix}CAUSAL_DEPLOYMENTS`, JSON.stringify(data.causalDeployments));
       localStorage.setItem(`${STORAGE_KEY}_${prefix}FIN_PARAMS`, JSON.stringify(data.financialParams));
+      if (data.lastUpdatedISO) {
+        localStorage.setItem(`${STORAGE_KEY}_${prefix}LAST_UPDATED_ISO`, data.lastUpdatedISO);
+      }
 
       if (isDefault) {
         localStorage.setItem(`${STORAGE_KEY}_PROCESSES`, JSON.stringify(data.processes));
@@ -153,6 +195,9 @@ export default function App() {
         localStorage.setItem(`${STORAGE_KEY}_MATRIX_B`, JSON.stringify(data.matrixB));
         localStorage.setItem(`${STORAGE_KEY}_CAUSAL_DEPLOYMENTS`, JSON.stringify(data.causalDeployments));
         localStorage.setItem(`${STORAGE_KEY}_FIN_PARAMS`, JSON.stringify(data.financialParams));
+        if (data.lastUpdatedISO) {
+          localStorage.setItem(`${STORAGE_KEY}_LAST_UPDATED_ISO`, data.lastUpdatedISO);
+        }
       }
     } catch (err) {
       console.error('Error saving WCM data to localStorage:', err);
@@ -221,36 +266,59 @@ export default function App() {
     setCausalDeployments(cached.cd);
     setFinancialParams(cached.fp);
 
-    setTimeout(() => {
-      isRemoteSyncRef.current = false;
-      isInitialLoadDoneRef.current = true;
-    }, 150);
+    let isFirstCloudSnapshot = true;
 
     const unsubscribe = subscribeToWcmPlant(
       currentPlantId,
       (cloudData: WcmPlantFirestoreData) => {
-        if (cloudData && cloudData.processes && cloudData.processes.length > 0) {
+        const hasCloudProcesses = Boolean(
+          cloudData && cloudData.processes && cloudData.processes.length > 0
+        );
+
+        // Check if local browser cache has unsynced edits newer than the cloud snapshot
+        const localTime = cached.lastUpdatedISO ? Date.parse(cached.lastUpdatedISO) : 0;
+        const cloudTime = cloudData?.lastUpdatedISO ? Date.parse(cloudData.lastUpdatedISO) : 0;
+        const isLocalNewerOnFirstLoad =
+          isFirstCloudSnapshot && localTime > 0 && localTime > cloudTime;
+        isFirstCloudSnapshot = false;
+
+        if (hasCloudProcesses && !isLocalNewerOnFirstLoad) {
           isRemoteSyncRef.current = true;
           setProcesses(cloudData.processes);
-          if (cloudData.losses) setLosses(cloudData.losses);
+          const rawLosses = cloudData.losses || INITIAL_LOSS_CATEGORIES;
+          const rawMatrixA = cloudData.matrixA || INITIAL_MATRIX_A_VALUES;
+          const merged = mergeWithStandardWcmData(rawLosses, rawMatrixA);
+          setLosses(merged.losses);
           if (cloudData.rootCauses) setRootCauses(cloudData.rootCauses);
-          if (cloudData.matrixA) setMatrixA(cloudData.matrixA);
+          setMatrixA(merged.matrixA);
           if (cloudData.matrixB) setMatrixB(cloudData.matrixB);
           if (cloudData.causalDeployments) {
             setCausalDeployments(cloudData.causalDeployments);
           }
           if (cloudData.financialParams) setFinancialParams(cloudData.financialParams);
 
-          setLastSyncedAt(
-            cloudData.lastUpdatedISO ? new Date(cloudData.lastUpdatedISO) : new Date()
-          );
+          const syncIso = cloudData.lastUpdatedISO || new Date().toISOString();
+          persistPlantToStorage(currentPlantId, {
+            processes: cloudData.processes,
+            losses: merged.losses,
+            rootCauses: cloudData.rootCauses || cached.r,
+            matrixA: merged.matrixA,
+            matrixB: cloudData.matrixB || cached.mb,
+            causalDeployments: cloudData.causalDeployments || cached.cd,
+            financialParams: cloudData.financialParams || cached.fp,
+            lastUpdatedISO: syncIso,
+          });
+
+          setLastSyncedAt(new Date(syncIso));
           setSyncStatus('synced');
           isInitialLoadDoneRef.current = true;
           setTimeout(() => {
             isRemoteSyncRef.current = false;
-          }, 300);
+          }, 150);
         } else {
-          // Document does not exist in Firestore yet -> seed with current data
+          // Document does not exist in Firestore yet OR local cache has newer unsynced changes -> push to Firestore
+          const nowIso = cached.lastUpdatedISO || new Date().toISOString();
+          isRemoteSyncRef.current = false;
           saveWcmPlantToFirestore(
             {
               processes: cached.p,
@@ -260,12 +328,13 @@ export default function App() {
               matrixB: cached.mb,
               causalDeployments: cached.cd,
               financialParams: cached.fp,
+              lastUpdatedISO: nowIso,
             },
             currentPlantId
           )
             .then(() => {
               setSyncStatus('synced');
-              setLastSyncedAt(new Date());
+              setLastSyncedAt(new Date(nowIso));
               isInitialLoadDoneRef.current = true;
             })
             .catch(() => {
@@ -276,6 +345,7 @@ export default function App() {
       },
       (err) => {
         console.warn(`Plant ${currentPlantId} operating in offline/local mode:`, err);
+        isRemoteSyncRef.current = false;
         setSyncStatus('offline');
         isInitialLoadDoneRef.current = true;
       }
@@ -288,7 +358,14 @@ export default function App() {
 
   // 3. Debounced Save to Firestore on local user modifications + LocalStorage backup
   useEffect(() => {
-    // Always persist to localStorage for instant offline safety
+    // Skip Firestore save if this update came directly from Firestore or before initial load
+    if (isRemoteSyncRef.current || !isInitialLoadDoneRef.current) {
+      return;
+    }
+
+    const nowIso = new Date().toISOString();
+
+    // Always persist to localStorage with updated timestamp for instant offline safety
     persistPlantToStorage(currentPlantId, {
       processes,
       losses,
@@ -297,12 +374,8 @@ export default function App() {
       matrixB,
       causalDeployments,
       financialParams,
+      lastUpdatedISO: nowIso,
     });
-
-    // Skip Firestore save if this update came directly from Firestore or before initial load
-    if (isRemoteSyncRef.current || !isInitialLoadDoneRef.current) {
-      return;
-    }
 
     setSyncStatus('saving');
     const timer = setTimeout(async () => {
@@ -316,16 +389,17 @@ export default function App() {
             matrixB,
             causalDeployments,
             financialParams,
+            lastUpdatedISO: nowIso,
           },
           currentPlantId
         );
         setSyncStatus('synced');
-        setLastSyncedAt(new Date());
+        setLastSyncedAt(new Date(nowIso));
       } catch (error) {
         console.warn('Firestore save failed for plant:', currentPlantId, error);
         setSyncStatus('offline');
       }
-    }, 700);
+    }, 500);
 
     return () => clearTimeout(timer);
   }, [processes, losses, rootCauses, matrixA, matrixB, causalDeployments, financialParams, currentPlantId]);
@@ -501,17 +575,13 @@ export default function App() {
       return {
         totalPlantCost: causalCalculatedData.totalPlantCost,
         processPareto: causalCalculatedData.processPareto,
-        lossSummaries: legacyCalculatedData.lossSummaries,
+        lossSummaries:
+          causalCalculatedData.lossSummaries.length > 0
+            ? causalCalculatedData.lossSummaries
+            : legacyCalculatedData.lossSummaries,
         rootCausePareto: causalCalculatedData.rootCausePareto,
         pillarSummary: causalCalculatedData.pillarSummary,
-        totalCostBreakdown: {
-          laborCost: causalCalculatedData.totalLaborCost,
-          machineCost: 0,
-          materialCost: 0,
-          energyCost: causalCalculatedData.totalEnergyCost,
-          maintenanceCost: 0,
-          total: causalCalculatedData.totalPlantCost,
-        },
+        totalCostBreakdown: causalCalculatedData.costBreakdown,
       };
     }
 

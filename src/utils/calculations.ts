@@ -13,6 +13,7 @@ import {
   CausalDeployment,
   CalculatedDeploymentCost,
   CalculatedStageCost,
+  LossUnit,
 } from '../types/wcm';
 
 /**
@@ -35,10 +36,12 @@ export function calculateCausalDeployments(
   let totalPlantCost = 0;
   let totalLaborCost = 0;
   let totalEnergyCost = 0;
+  let totalOtherHourlyCost = 0;
+  let totalFixedCost = 0;
   let totalDurationHours = 0;
 
   // Calculate each deployment line and its impacted stages
-  const calculatedDeployments: CalculatedDeploymentCost[] = (deployments || []).map((dep) => {
+  const calculatedDeployments = (deployments || []).map((dep) => {
     const originProc = processMap.get(dep.originProcessId);
     const loss = lossMap.get(dep.lossId);
 
@@ -84,8 +87,11 @@ export function calculateCausalDeployments(
       : 0;
 
     const stages: CalculatedStageCost[] = (dep.impactedStages || []).map((stage) => {
-      const dur = typeof stage.durationHours === 'number' ? stage.durationHours : parseFloat(String(stage.durationHours)) || 0;
-      const ops = typeof stage.operatorCount === 'number' ? stage.operatorCount : parseInt(String(stage.operatorCount), 10) || 1;
+      const isStop = stage.isStop !== false;
+      const rawDur = typeof stage.durationHours === 'number' ? stage.durationHours : parseFloat(String(stage.durationHours)) || 0;
+      const rawOps = typeof stage.operatorCount === 'number' ? stage.operatorCount : parseInt(String(stage.operatorCount), 10) || 1;
+      const dur = isStop ? rawDur : 0;
+      const ops = isStop ? rawOps : 0;
       
       const labor = dur * ops * depLaborRate;
       const energyRate = typeof stage.customEnergyRatePerHour === 'number' ? stage.customEnergyRatePerHour : depEnergyRate;
@@ -101,7 +107,7 @@ export function calculateCausalDeployments(
       return {
         stageId: stage.id,
         stageName: stage.stageName,
-        isStop: stage.isStop,
+        isStop,
         durationHours: dur,
         operatorCount: ops,
         laborCost: labor,
@@ -115,6 +121,8 @@ export function calculateCausalDeployments(
     totalPlantCost += depTotalCost;
     totalLaborCost += depLaborCost;
     totalEnergyCost += depEnergyCost;
+    totalOtherHourlyCost += depOtherHourlyCost;
+    totalFixedCost += depFixedCost;
     totalDurationHours += depDurationHours;
 
     return {
@@ -129,6 +137,8 @@ export function calculateCausalDeployments(
       stages,
       totalLaborCost: depLaborCost,
       totalEnergyCost: depEnergyCost,
+      totalOtherHourlyCost: depOtherHourlyCost,
+      totalFixedCost: depFixedCost,
       totalCost: depTotalCost,
       totalDurationHours: depDurationHours,
     };
@@ -170,15 +180,103 @@ export function calculateCausalDeployments(
     processCostsMap[pId].hours += calc.totalDurationHours;
   });
 
-  const sortedProcesses = Object.values(processCostsMap).sort((a, b) => b.totalLossCost - a.totalLossCost);
+  const sortedProcesses = Object.values(processCostsMap).sort(
+    (a, b) => b.totalLossCost - a.totalLossCost || b.hours - a.hours
+  );
   let cumProc = 0;
+  let cumProcHours = 0;
   const processPareto = sortedProcesses.map((p) => {
     cumProc += p.totalLossCost;
+    cumProcHours += p.hours;
+    const percentage =
+      totalPlantCost > 0
+        ? (p.totalLossCost / totalPlantCost) * 100
+        : totalDurationHours > 0
+        ? (p.hours / totalDurationHours) * 100
+        : 0;
+    const cumulativePercentage =
+      totalPlantCost > 0
+        ? (cumProc / totalPlantCost) * 100
+        : totalDurationHours > 0
+        ? (cumProcHours / totalDurationHours) * 100
+        : 0;
     return {
       ...p,
       costsByLoss: {},
-      percentage: totalPlantCost > 0 ? (p.totalLossCost / totalPlantCost) * 100 : 0,
-      cumulativePercentage: totalPlantCost > 0 ? (cumProc / totalPlantCost) * 100 : 0,
+      percentage,
+      cumulativePercentage,
+    };
+  });
+
+  // Calculate Loss Summaries Pareto (by Loss Category mapped in Causal Deployments)
+  const lossCostsMap: Record<
+    string,
+    {
+      lossId: string;
+      lossCode: string;
+      lossName: string;
+      unit: LossUnit;
+      totalPhysicalValue: number;
+      totalFinancialCost: number;
+      breakdown: LossCostBreakdown;
+    }
+  > = {};
+
+  calculatedDeployments.forEach((calc) => {
+    const lId = calc.deployment.lossId;
+    const loss = lossMap.get(lId);
+    const key = lId || calc.lossName;
+    if (!lossCostsMap[key]) {
+      lossCostsMap[key] = {
+        lossId: lId,
+        lossCode: loss?.code || calc.lossCode || '1.1',
+        lossName: loss?.name || calc.lossName || 'Perda',
+        unit: loss?.unit || 'horas',
+        totalPhysicalValue: 0,
+        totalFinancialCost: 0,
+        breakdown: {
+          laborCost: 0,
+          machineCost: 0,
+          materialCost: 0,
+          energyCost: 0,
+          maintenanceCost: 0,
+          totalCost: 0,
+        },
+      };
+    }
+    lossCostsMap[key].totalPhysicalValue += calc.totalDurationHours;
+    lossCostsMap[key].totalFinancialCost += calc.totalCost;
+    lossCostsMap[key].breakdown.laborCost += calc.totalLaborCost;
+    lossCostsMap[key].breakdown.energyCost += calc.totalEnergyCost;
+    lossCostsMap[key].breakdown.machineCost += calc.totalOtherHourlyCost;
+    lossCostsMap[key].breakdown.materialCost += calc.totalFixedCost;
+    lossCostsMap[key].breakdown.totalCost += calc.totalCost;
+  });
+
+  const sortedLosses = Object.values(lossCostsMap).sort(
+    (a, b) => b.totalFinancialCost - a.totalFinancialCost || b.totalPhysicalValue - a.totalPhysicalValue
+  );
+  let cumLoss = 0;
+  let cumLossHours = 0;
+  const lossSummaries: CalculatedLossSummary[] = sortedLosses.map((l) => {
+    cumLoss += l.totalFinancialCost;
+    cumLossHours += l.totalPhysicalValue;
+    const percentage =
+      totalPlantCost > 0
+        ? (l.totalFinancialCost / totalPlantCost) * 100
+        : totalDurationHours > 0
+        ? (l.totalPhysicalValue / totalDurationHours) * 100
+        : 0;
+    const cumulativePercentage =
+      totalPlantCost > 0
+        ? (cumLoss / totalPlantCost) * 100
+        : totalDurationHours > 0
+        ? (cumLossHours / totalDurationHours) * 100
+        : 0;
+    return {
+      ...l,
+      percentage,
+      cumulativePercentage,
     };
   });
 
@@ -220,10 +318,26 @@ export function calculateCausalDeployments(
     rootCausesMap[key].count += 1;
   });
 
-  const sortedCauses = Object.values(rootCausesMap).sort((a, b) => b.totalCost - a.totalCost);
+  const sortedCauses = Object.values(rootCausesMap).sort(
+    (a, b) => b.totalCost - a.totalCost || b.hours - a.hours
+  );
   let cumCause = 0;
+  let cumCauseHours = 0;
   const rootCausePareto = sortedCauses.map((c, idx) => {
     cumCause += c.totalCost;
+    cumCauseHours += c.hours;
+    const percentage =
+      totalPlantCost > 0
+        ? (c.totalCost / totalPlantCost) * 100
+        : totalDurationHours > 0
+        ? (c.hours / totalDurationHours) * 100
+        : 0;
+    const cumulativePercentage =
+      totalPlantCost > 0
+        ? (cumCause / totalPlantCost) * 100
+        : totalDurationHours > 0
+        ? (cumCauseHours / totalDurationHours) * 100
+        : 0;
     return {
       causeId: `cause_${idx + 1}`,
       causeCode: c.causeCode,
@@ -231,19 +345,20 @@ export function calculateCausalDeployments(
       pillar: c.pillar,
       category: c.category,
       totalCost: c.totalCost,
-      percentage: totalPlantCost > 0 ? (c.totalCost / totalPlantCost) * 100 : 0,
-      cumulativePercentage: totalPlantCost > 0 ? (cumCause / totalPlantCost) * 100 : 0,
+      percentage,
+      cumulativePercentage,
       affectedLossesCount: c.count,
     };
   });
 
   // Pillar Summary
-  const pillarMap: Record<string, { totalCost: number; count: number }> = {};
+  const pillarMap: Record<string, { totalCost: number; hours: number; count: number }> = {};
   calculatedDeployments.forEach((calc) => {
     if (!pillarMap[calc.pillar]) {
-      pillarMap[calc.pillar] = { totalCost: 0, count: 0 };
+      pillarMap[calc.pillar] = { totalCost: 0, hours: 0, count: 0 };
     }
     pillarMap[calc.pillar].totalCost += calc.totalCost;
+    pillarMap[calc.pillar].hours += calc.totalDurationHours;
     pillarMap[calc.pillar].count += 1;
   });
 
@@ -251,24 +366,30 @@ export function calculateCausalDeployments(
     .map(([pillar, val]) => ({
       pillar: pillar as WCMPillar,
       totalCost: val.totalCost,
-      percentage: totalPlantCost > 0 ? (val.totalCost / totalPlantCost) * 100 : 0,
+      percentage:
+        totalPlantCost > 0
+          ? (val.totalCost / totalPlantCost) * 100
+          : totalDurationHours > 0
+          ? (val.hours / totalDurationHours) * 100
+          : 0,
       causesCount: val.count,
     }))
     .sort((a, b) => b.totalCost - a.totalCost);
 
   return {
-    calculatedDeployments,
+    calculatedDeployments: calculatedDeployments as CalculatedDeploymentCost[],
     totalPlantCost,
     totalLaborCost,
     totalEnergyCost,
     totalDurationHours,
     processPareto,
+    lossSummaries,
     rootCausePareto,
     pillarSummary,
     costBreakdown: {
       laborCost: totalLaborCost,
-      machineCost: 0,
-      materialCost: 0,
+      machineCost: totalOtherHourlyCost,
+      materialCost: totalFixedCost,
       energyCost: totalEnergyCost,
       maintenanceCost: 0,
       totalCost: totalPlantCost,
@@ -672,5 +793,47 @@ export const PILLAR_INFO: Record<string, { name: string; color: string; bg: stri
     color: 'text-rose-400',
     bg: 'bg-rose-500/10 text-rose-300',
     border: 'border-rose-500/30',
+  },
+  SAF: {
+    name: 'Segurança & Saúde (SAF)',
+    color: 'text-rose-400',
+    bg: 'bg-rose-500/10 text-rose-300',
+    border: 'border-rose-500/30',
+  },
+  WO: {
+    name: 'Organização do Posto de Trabalho (WO)',
+    color: 'text-indigo-400',
+    bg: 'bg-indigo-500/10 text-indigo-300',
+    border: 'border-indigo-500/30',
+  },
+  'FI/WO': {
+    name: 'Melhoria Focada / Organização (FI/WO)',
+    color: 'text-blue-300',
+    bg: 'bg-blue-500/20 text-blue-200',
+    border: 'border-blue-500/40',
+  },
+  'FI/PD': {
+    name: 'Melhoria Focada / Pessoas (FI/PD)',
+    color: 'text-sky-300',
+    bg: 'bg-sky-500/20 text-sky-200',
+    border: 'border-sky-500/40',
+  },
+  'WO/QC': {
+    name: 'Organização / Qualidade (WO/QC)',
+    color: 'text-purple-300',
+    bg: 'bg-purple-500/20 text-purple-200',
+    border: 'border-purple-500/40',
+  },
+  'PD/QC': {
+    name: 'Pessoas / Qualidade (PD/QC)',
+    color: 'text-teal-300',
+    bg: 'bg-teal-500/20 text-teal-200',
+    border: 'border-teal-500/40',
+  },
+  'LOG/QC': {
+    name: 'Logística / Qualidade (LOG/QC)',
+    color: 'text-orange-300',
+    bg: 'bg-orange-500/20 text-orange-200',
+    border: 'border-orange-500/40',
   },
 };

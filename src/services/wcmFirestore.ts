@@ -40,6 +40,14 @@ export interface WcmPlantFirestoreData {
 export type SyncStatus = 'synced' | 'saving' | 'offline' | 'error' | 'loading';
 
 /**
+ * Strips any `undefined` properties recursively so Firestore setDoc never fails
+ * with "Unsupported field value: undefined".
+ */
+function sanitizeForFirestore<T>(data: T): T {
+  return JSON.parse(JSON.stringify(data));
+}
+
+/**
  * Subscribes to real-time updates from Firestore for the registered plant areas list.
  */
 export function subscribeToPlantAreas(
@@ -47,10 +55,16 @@ export function subscribeToPlantAreas(
   onError: (error: Error) => void
 ) {
   try {
+    let isFirstSnapshot = true;
     const docRef = doc(db, 'wcm_plants', AREAS_REGISTRY_DOC_ID);
     const unsubscribe = onSnapshot(
       docRef,
       (snapshot) => {
+        if (!isFirstSnapshot && snapshot.metadata.hasPendingWrites) {
+          return;
+        }
+        isFirstSnapshot = false;
+
         if (snapshot.exists()) {
           const data = snapshot.data();
           if (data && Array.isArray(data.areas) && data.areas.length > 0) {
@@ -82,7 +96,7 @@ export async function savePlantAreasToFirestore(areas: PlantArea[]): Promise<voi
     await setDoc(
       docRef,
       {
-        areas,
+        areas: sanitizeForFirestore(areas),
         updatedAt: serverTimestamp(),
         lastUpdatedISO: new Date().toISOString(),
       },
@@ -110,6 +124,7 @@ export async function updatePlantMetadataInFirestore(
         plantCode: data.code || '',
         plantDescription: data.description || '',
         updatedAt: serverTimestamp(),
+        lastUpdatedISO: new Date().toISOString(),
       },
       { merge: true }
     );
@@ -141,10 +156,17 @@ export function subscribeToWcmPlant(
   onError: (error: Error) => void
 ) {
   try {
+    let isFirstSnapshot = true;
     const docRef = doc(db, 'wcm_plants', plantId);
     const unsubscribe = onSnapshot(
       docRef,
       (snapshot) => {
+        // Ignore local echo writes after the first snapshot so active user edits aren't interrupted
+        if (!isFirstSnapshot && snapshot.metadata.hasPendingWrites) {
+          return;
+        }
+        isFirstSnapshot = false;
+
         if (snapshot.exists()) {
           const rawData = snapshot.data() as WcmPlantFirestoreData;
           onUpdate(rawData);
@@ -181,26 +203,31 @@ export async function saveWcmPlantToFirestore(
     matrixB: MatrixBCell[];
     causalDeployments?: CausalDeployment[];
     financialParams: FinancialParameters;
+    lastUpdatedISO?: string;
   },
   plantId: string = DEFAULT_PLANT_DOC_ID
 ): Promise<void> {
   try {
     const docRef = doc(db, 'wcm_plants', plantId);
+    const sanitizedPayload = sanitizeForFirestore({
+      ...(data.plantName !== undefined ? { plantName: data.plantName } : {}),
+      ...(data.plantCode !== undefined ? { plantCode: data.plantCode } : {}),
+      ...(data.plantDescription !== undefined ? { plantDescription: data.plantDescription } : {}),
+      processes: data.processes,
+      losses: data.losses,
+      rootCauses: data.rootCauses,
+      matrixA: data.matrixA,
+      matrixB: data.matrixB,
+      causalDeployments: data.causalDeployments || [],
+      financialParams: data.financialParams,
+      lastUpdatedISO: data.lastUpdatedISO || new Date().toISOString(),
+    });
+
     await setDoc(
       docRef,
       {
-        plantName: data.plantName,
-        plantCode: data.plantCode,
-        plantDescription: data.plantDescription,
-        processes: data.processes,
-        losses: data.losses,
-        rootCauses: data.rootCauses,
-        matrixA: data.matrixA,
-        matrixB: data.matrixB,
-        causalDeployments: data.causalDeployments || [],
-        financialParams: data.financialParams,
+        ...sanitizedPayload,
         updatedAt: serverTimestamp(),
-        lastUpdatedISO: new Date().toISOString(),
       },
       { merge: true }
     );
@@ -209,4 +236,5 @@ export async function saveWcmPlantToFirestore(
     throw error;
   }
 }
+
 

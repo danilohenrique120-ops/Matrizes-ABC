@@ -1,4 +1,24 @@
-export type WCMPillar = 'FI' | 'AM' | 'PM' | 'QC' | 'E&T' | 'ENV' | 'LOG' | 'SE' | 'PD' | 'AM/PM' | 'FI/QC' | 'FI/LOG' | 'FI/AM/PM';
+export type WCMPillar =
+  | 'FI'
+  | 'AM'
+  | 'PM'
+  | 'QC'
+  | 'E&T'
+  | 'ENV'
+  | 'LOG'
+  | 'SE'
+  | 'PD'
+  | 'WO'
+  | 'SAF'
+  | 'AM/PM'
+  | 'FI/QC'
+  | 'FI/LOG'
+  | 'FI/AM/PM'
+  | 'FI/WO'
+  | 'FI/PD'
+  | 'WO/QC'
+  | 'PD/QC'
+  | 'LOG/QC';
 
 export type CauseResultType = 'C' | 'R' | 'C/R';
 

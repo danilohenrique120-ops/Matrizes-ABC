@@ -355,91 +355,804 @@ export const INITIAL_LOSS_CATEGORIES: LossCategory[] = [
   },
 
   // 02. MÃO DE OBRA
+  // 2.1 - TEMPO PERDIDO DE PRODUÇÃO
   {
     id: 'loss_2_1_1',
     code: '2.1.1',
-    name: 'MOVIMENTAÇÃO EXCESSIVA',
+    name: 'NVAA - TRABALHO EXTRA',
     lossType: '02. MÃO DE OBRA',
-    category: '2.1 - EFICIÊNCIA DO TRABALHO',
-    causeResult: 'C',
+    category: '2.1 - TEMPO PERDIDO DE PRODUÇÃO',
+    causeResult: 'R',
     pillar: 'FI',
     unit: 'horas',
-    description: 'Deslocamentos desnecessários de operadores buscando ferramentas ou insumos',
+    description: 'Atividades não agregadoras de valor gerando esforço e horas extras de produção',
     wcmType: 'Performance',
-    costDrivers: {
-      useLabor: true,
-      useMachineOverhead: false,
-      useMaterial: false,
-      useElectricity: false,
-      useWaterSteam: false,
-      useMaintenance: false,
-      customMultiplier: 1.0,
-    },
+    costDrivers: { useLabor: true, useMachineOverhead: true, useMaterial: false, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
   },
   {
     id: 'loss_2_1_2',
     code: '2.1.2',
-    name: 'FALTA DE BALANCEAMENTO DE LINHA',
+    name: 'NVAA - OPERADOR EM MOVIMENTO',
     lossType: '02. MÃO DE OBRA',
-    category: '2.1 - EFICIÊNCIA DO TRABALHO',
+    category: '2.1 - TEMPO PERDIDO DE PRODUÇÃO',
+    causeResult: 'C/R',
+    pillar: 'WO',
+    unit: 'horas',
+    description: 'Deslocamentos e movimentações desnecessárias do operador no posto de trabalho',
+    wcmType: 'Performance',
+    costDrivers: { useLabor: true, useMachineOverhead: false, useMaterial: false, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+
+  // 2.2 - ORGANIZAÇÃO DA LINHA
+  {
+    id: 'loss_2_2_1',
+    code: '2.2.1',
+    name: 'NVAA - OPERADOR MANUSEANDO MATERIAL',
+    lossType: '02. MÃO DE OBRA',
+    category: '2.2 - ORGANIZAÇÃO DA LINHA',
+    causeResult: 'C/R',
+    pillar: 'WO',
+    unit: 'horas',
+    description: 'Manuseio excessivo de frascos, embalagens e insumos na linha operacional',
+    wcmType: 'Performance',
+    costDrivers: { useLabor: true, useMachineOverhead: false, useMaterial: false, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_2_2_2',
+    code: '2.2.2',
+    name: 'NVAA - OPERADOR AGUARDANDO',
+    lossType: '02. MÃO DE OBRA',
+    category: '2.2 - ORGANIZAÇÃO DA LINHA',
+    causeResult: 'C',
+    pillar: 'FI/WO',
+    unit: 'horas',
+    description: 'Tempo de espera de operador aguardando liberação de máquina, insumo ou processo anterior',
+    wcmType: 'Performance',
+    costDrivers: { useLabor: true, useMachineOverhead: true, useMaterial: false, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_2_2_3',
+    code: '2.2.3',
+    name: 'NVAA - DESBALANCEAMENTO',
+    lossType: '02. MÃO DE OBRA',
+    category: '2.2 - ORGANIZAÇÃO DA LINHA',
+    causeResult: 'C',
+    pillar: 'WO',
+    unit: 'horas',
+    description: 'Diferença de tempos de ciclo entre postos de trabalho gerando ociosidade',
+    wcmType: 'Performance',
+    costDrivers: { useLabor: true, useMachineOverhead: true, useMaterial: false, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+
+  // 2.3 - QUALIDADE
+  {
+    id: 'loss_2_3_1',
+    code: '2.3.1',
+    name: 'CHECAGEM DE QUALIDADE',
+    lossType: '02. MÃO DE OBRA',
+    category: '2.3 - QUALIDADE',
+    causeResult: 'C/R',
+    pillar: 'QC',
+    unit: 'horas',
+    description: 'Tempo despendido em amostragens, checagens repetitivas e inspeções em linha',
+    wcmType: 'Qualidade',
+    costDrivers: { useLabor: true, useMachineOverhead: false, useMaterial: false, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_2_3_2',
+    code: '2.3.2',
+    name: 'CONTROLE DE QUALIDADE',
+    lossType: '02. MÃO DE OBRA',
+    category: '2.3 - QUALIDADE',
+    causeResult: 'C/R',
+    pillar: 'QC',
+    unit: 'horas',
+    description: 'Tempo de parada ou liberação aguardando análises laboratoriais e controle de processo',
+    wcmType: 'Qualidade',
+    costDrivers: { useLabor: true, useMachineOverhead: true, useMaterial: false, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+
+  // 2.4 - EFICIÊNCIA DA ÁREA
+  {
+    id: 'loss_2_4_1',
+    code: '2.4.1',
+    name: 'GESTÃO',
+    lossType: '02. MÃO DE OBRA',
+    category: '2.4 - EFICIÊNCIA DA ÁREA',
     causeResult: 'C/R',
     pillar: 'FI',
     unit: 'horas',
-    description: 'Espera entre postos de trabalho desbalanceados durante o envase',
+    description: 'Ineficiências de coordenação, programação de ordens e alocação da área fabril',
     wcmType: 'Performance',
-    costDrivers: {
-      useLabor: true,
-      useMachineOverhead: true,
-      useMaterial: false,
-      useElectricity: false,
-      useWaterSteam: false,
-      useMaintenance: false,
-      customMultiplier: 1.0,
-    },
+    costDrivers: { useLabor: true, useMachineOverhead: false, useMaterial: false, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_2_4_2',
+    code: '2.4.2',
+    name: 'HORA EXTRA',
+    lossType: '02. MÃO DE OBRA',
+    category: '2.4 - EFICIÊNCIA DA ÁREA',
+    causeResult: 'R',
+    pillar: 'PD',
+    unit: 'horas',
+    description: 'Custo e tempo em horas extraordinárias para compensar atrasos ou paradas fabris',
+    wcmType: 'Performance',
+    costDrivers: { useLabor: true, useMachineOverhead: true, useMaterial: false, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_2_4_3',
+    code: '2.4.3',
+    name: 'ABSENTEÍSMO',
+    lossType: '02. MÃO DE OBRA',
+    category: '2.4 - EFICIÊNCIA DA ÁREA',
+    causeResult: 'C',
+    pillar: 'PD',
+    unit: 'horas',
+    description: 'Falta de operadores programados impactando o ritmo da linha de produção',
+    wcmType: 'Disponibilidade',
+    costDrivers: { useLabor: true, useMachineOverhead: true, useMaterial: false, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_2_4_4',
+    code: '2.4.4',
+    name: 'EFICIÊNCIA OPERACIONAL',
+    lossType: '02. MÃO DE OBRA',
+    category: '2.4 - EFICIÊNCIA DA ÁREA',
+    causeResult: 'C',
+    pillar: 'PD',
+    unit: 'horas',
+    description: 'Ritmo operacional abaixo do padrão nominal de velocidade da equipe',
+    wcmType: 'Performance',
+    costDrivers: { useLabor: true, useMachineOverhead: true, useMaterial: false, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_2_4_5',
+    code: '2.4.5',
+    name: 'TREINAMENTO & REUNIÃO',
+    lossType: '02. MÃO DE OBRA',
+    category: '2.4 - EFICIÊNCIA DA ÁREA',
+    causeResult: 'C',
+    pillar: 'FI/PD',
+    unit: 'horas',
+    description: 'Tempo de linha parada para treinamentos de equipe, alinhamentos diários e reuniões',
+    wcmType: 'Performance',
+    costDrivers: { useLabor: true, useMachineOverhead: true, useMaterial: false, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_2_4_6',
+    code: '2.4.6',
+    name: 'ATIVIDADES AUTÔNOMAS',
+    lossType: '02. MÃO DE OBRA',
+    category: '2.4 - EFICIÊNCIA DA ÁREA',
+    causeResult: 'C',
+    pillar: 'AM',
+    unit: 'horas',
+    description: 'Interrupções para inspeção, reaperto e manutenções autônomas operacionais',
+    wcmType: 'Performance',
+    costDrivers: { useLabor: true, useMachineOverhead: true, useMaterial: false, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
   },
 
-  // 03. ENERGIA & UTILIDADES
+  // 2.5 - DEFEITO LABORAL
+  {
+    id: 'loss_2_5_1',
+    code: '2.5.1',
+    name: 'SUCATA',
+    lossType: '02. MÃO DE OBRA',
+    category: '2.5 - DEFEITO LABORAL',
+    causeResult: 'C/R',
+    pillar: 'WO/QC',
+    unit: 'horas',
+    description: 'Descarte e perdas de produto originadas por erro de manuseio ou operação',
+    wcmType: 'Qualidade',
+    costDrivers: { useLabor: true, useMachineOverhead: true, useMaterial: true, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_2_5_2',
+    code: '2.5.2',
+    name: 'RETRABALHO',
+    lossType: '02. MÃO DE OBRA',
+    category: '2.5 - DEFEITO LABORAL',
+    causeResult: 'C/R',
+    pillar: 'PD/QC',
+    unit: 'horas',
+    description: 'Horas reprocessando produtos rejeitados devido a desvios operacionais',
+    wcmType: 'Qualidade',
+    costDrivers: { useLabor: true, useMachineOverhead: true, useMaterial: false, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+
+  // 2.6 - OPORTUNIDADE DE TRABALHO
+  {
+    id: 'loss_2_6_1',
+    code: '2.6.1',
+    name: 'OPORTUNIDADE DE TRABALHO',
+    lossType: '02. MÃO DE OBRA',
+    category: '2.6 - OPORTUNIDADE DE TRABALHO',
+    causeResult: 'C/R',
+    pillar: 'FI',
+    unit: 'horas',
+    description: 'Potencial de ganho por melhor alocação e otimização das tarefas da mão de obra',
+    wcmType: 'Performance',
+    costDrivers: { useLabor: true, useMachineOverhead: false, useMaterial: false, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+
+  // 2.7 - PERDA DE MANUTENÇÃO
+  {
+    id: 'loss_2_7_1',
+    code: '2.7.1',
+    name: 'LIMPEZA ESPECIALIZADA',
+    lossType: '02. MÃO DE OBRA',
+    category: '2.7 - PERDA DE MANUTENÇÃO',
+    causeResult: 'C',
+    pillar: 'FI',
+    unit: 'horas',
+    description: 'Limpeza técnica aprofundada, sanitização e esterilização de circuitos',
+    wcmType: 'Disponibilidade',
+    costDrivers: { useLabor: true, useMachineOverhead: true, useMaterial: false, useElectricity: false, useWaterSteam: true, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_2_7_2',
+    code: '2.7.2',
+    name: 'LIMPEZA COMUM',
+    lossType: '02. MÃO DE OBRA',
+    category: '2.7 - PERDA DE MANUTENÇÃO',
+    causeResult: 'C/R',
+    pillar: 'FI',
+    unit: 'horas',
+    description: 'Higienização de rotina de pisos, bancadas e superfícies da área produtiva',
+    wcmType: 'Disponibilidade',
+    costDrivers: { useLabor: true, useMachineOverhead: false, useMaterial: false, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+
+  // 2.8 - GESTÃO E PERDA ADMINISTRATIVA
+  {
+    id: 'loss_2_8_1',
+    code: '2.8.1',
+    name: 'GESTÃO DA PRODUÇÃO E ADMINISTRAÇÃO',
+    lossType: '02. MÃO DE OBRA',
+    category: '2.8 - GESTÃO E PERDA ADMINISTRATIVA',
+    causeResult: 'C/R',
+    pillar: 'FI/PD',
+    unit: 'horas',
+    description: 'Apontamentos manuais, documentação de lote, burocracia e pausas administrativas',
+    wcmType: 'Performance',
+    costDrivers: { useLabor: true, useMachineOverhead: false, useMaterial: false, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+
+  // 03. MATERIAL
+  // 3.1 - MATERIAL DIRETO
+  {
+    id: 'loss_3_1_1',
+    code: '3.1.1',
+    name: 'SUCATA',
+    lossType: '03. MATERIAL',
+    category: '3.1 - MATERIAL DIRETO',
+    causeResult: 'C',
+    pillar: 'LOG/QC',
+    unit: 'kg',
+    description: 'Perda direta de matéria-prima, formulação e insumos descartados',
+    wcmType: 'Qualidade',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: true, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_3_1_2',
+    code: '3.1.2',
+    name: 'RETRABALHO',
+    lossType: '03. MATERIAL',
+    category: '3.1 - MATERIAL DIRETO',
+    causeResult: 'C/R',
+    pillar: 'LOG/QC',
+    unit: 'kg',
+    description: 'Matéria-prima reprocessada ou reblended por não conformidade imediata',
+    wcmType: 'Qualidade',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: true, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+
+  // 3.2 - MATERIAL INDIRETO
+  {
+    id: 'loss_3_2_1',
+    code: '3.2.1',
+    name: 'MATERIAL DE CONSUMO',
+    lossType: '03. MATERIAL',
+    category: '3.2 - MATERIAL INDIRETO',
+    causeResult: 'C/R',
+    pillar: 'FI',
+    unit: 'unidades',
+    description: 'Desperdício de filtros, membranas, mangueiras e consumíveis industriais',
+    wcmType: 'Consumíveis',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: true, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_3_2_2',
+    code: '3.2.2',
+    name: 'PEÇA DE MANUTENÇÃO',
+    lossType: '03. MATERIAL',
+    category: '3.2 - MATERIAL INDIRETO',
+    causeResult: 'C/R',
+    pillar: 'PM',
+    unit: 'peças',
+    description: 'Substituição prematura de sobressalentes mecânicos, selos e gaxetas',
+    wcmType: 'Consumíveis',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: true, useElectricity: false, useWaterSteam: false, useMaintenance: true, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_3_2_3',
+    code: '3.2.3',
+    name: 'EPI',
+    lossType: '03. MATERIAL',
+    category: '3.2 - MATERIAL INDIRETO',
+    causeResult: 'C',
+    pillar: 'SAF',
+    unit: 'unidades',
+    description: 'Desgaste ou descarte excessivo de equipamentos de proteção individual',
+    wcmType: 'Consumíveis',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: true, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+
+  // 04. MEIO AMBIENTE
+  // 4.1 - RESÍDUOS AMBIENTAIS
   {
     id: 'loss_4_1_1',
     code: '4.1.1',
-    name: 'CONSUMO EXCESSIVO DE ENERGIA',
-    lossType: '03. ENERGIA & UTILIDADES',
-    category: '3.1 - EFICIÊNCIA ENERGÉTICA',
-    causeResult: 'C',
+    name: 'RESÍDUOS RECICLADOS',
+    lossType: '04. MEIO AMBIENTE',
+    category: '4.1 - RESÍDUOS AMBIENTAIS',
+    causeResult: 'C/R',
     pillar: 'ENV',
-    unit: 'kWh',
-    description: 'Consumo fora do padrão em chillers, agitação de biorreatores e iluminação',
-    wcmType: 'Energia',
-    costDrivers: {
-      useLabor: false,
-      useMachineOverhead: false,
-      useMaterial: false,
-      useElectricity: true,
-      useWaterSteam: false,
-      useMaintenance: false,
-      customMultiplier: 1.0,
-    },
+    unit: 'kg',
+    description: 'Volume de papelão, plásticos e pallets encaminhados para reciclagem',
+    wcmType: 'Consumíveis',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: true, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
   },
   {
     id: 'loss_4_1_2',
     code: '4.1.2',
-    name: 'VAZAMENTO DE VAPOR & ÁGUA WFI',
-    lossType: '03. ENERGIA & UTILIDADES',
-    category: '3.1 - EFICIÊNCIA ENERGÉTICA',
+    name: 'MANEJO DE RESÍDUOS',
+    lossType: '04. MEIO AMBIENTE',
+    category: '4.1 - RESÍDUOS AMBIENTAIS',
+    causeResult: 'C/R',
+    pillar: 'ENV',
+    unit: 'horas',
+    description: 'Tempo e custos de movimentação interna e triagem de resíduos sólidos',
+    wcmType: 'Consumíveis',
+    costDrivers: { useLabor: true, useMachineOverhead: false, useMaterial: false, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_4_1_3',
+    code: '4.1.3',
+    name: 'UTILIDADES DE RESÍDUOS',
+    lossType: '04. MEIO AMBIENTE',
+    category: '4.1 - RESÍDUOS AMBIENTAIS',
+    causeResult: 'C/R',
+    pillar: 'ENV',
+    unit: 'm³',
+    description: 'Descarte e destinação de insumos de utilidades e borras industriais',
+    wcmType: 'Consumíveis',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: true, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+
+  // 4.2 - QUÍMICOS AMBIENTAIS
+  {
+    id: 'loss_4_2_1',
+    code: '4.2.1',
+    name: 'ÓLEOS LUBRIFICANTES',
+    lossType: '04. MEIO AMBIENTE',
+    category: '4.2 - QUÍMICOS AMBIENTAIS',
+    causeResult: 'C/R',
+    pillar: 'ENV',
+    unit: 'kg',
+    description: 'Descarte e reposição de óleos lubrificantes de redutores e bombas',
+    wcmType: 'Consumíveis',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: true, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_4_2_2',
+    code: '4.2.2',
+    name: 'ÓLEOS HIDRÁULICOS',
+    lossType: '04. MEIO AMBIENTE',
+    category: '4.2 - QUÍMICOS AMBIENTAIS',
+    causeResult: 'C/R',
+    pillar: 'ENV',
+    unit: 'kg',
+    description: 'Perdas em sistemas hidráulicos de prensas e tanques de formulação',
+    wcmType: 'Consumíveis',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: true, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_4_2_3',
+    code: '4.2.3',
+    name: 'PRODUTOS QUÍMICOS DE LAVAGEM',
+    lossType: '04. MEIO AMBIENTE',
+    category: '4.2 - QUÍMICOS AMBIENTAIS',
+    causeResult: 'C/R',
+    pillar: 'ENV',
+    unit: 'kg',
+    description: 'Consumo de soda, ácidos e detergentes em ciclos CIP/SIP de limpeza',
+    wcmType: 'Consumíveis',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: true, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_4_2_4',
+    code: '4.2.4',
+    name: 'PRODUTOS QUÍMICOS PARA TRATAMENTO DE ÁGUA DE ENTRADA',
+    lossType: '04. MEIO AMBIENTE',
+    category: '4.2 - QUÍMICOS AMBIENTAIS',
+    causeResult: 'C/R',
+    pillar: 'ENV',
+    unit: 'kg',
+    description: 'Insumos químicos utilizados na osmose reversa e abrandamento da água',
+    wcmType: 'Consumíveis',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: true, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+
+  // 4.3 - ÁGUA AMBIENTAL
+  {
+    id: 'loss_4_3_1',
+    code: '4.3.1',
+    name: 'ÁGUA NO LOCAL',
+    lossType: '04. MEIO AMBIENTE',
+    category: '4.3 - ÁGUA AMBIENTAL',
+    causeResult: 'C/R',
+    pillar: 'ENV',
+    unit: 'm³',
+    description: 'Consumo de água potável e industrial na lavagem e processos gerais',
+    wcmType: 'Consumíveis',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: false, useElectricity: false, useWaterSteam: true, useMaintenance: false, customMultiplier: 1.0 },
+  },
+
+  // 4.4 - EMISSÃO DE AR AMBIENTAL
+  {
+    id: 'loss_4_4_1',
+    code: '4.4.1',
+    name: 'CONTROLE DE EMISSÕES ATMOSFÉRICAS',
+    lossType: '04. MEIO AMBIENTE',
+    category: '4.4 - EMISSÃO DE AR AMBIENTAL',
+    causeResult: 'C/R',
+    pillar: 'ENV',
+    unit: 'unidades',
+    description: 'Custos de lavadores de gases, exaustão e filtros absolutos de ar',
+    wcmType: 'Consumíveis',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: true, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_4_4_2',
+    code: '4.4.2',
+    name: 'CONTROLE DE GEE (GASES DE EFEITO ESTUFA)',
+    lossType: '04. MEIO AMBIENTE',
+    category: '4.4 - EMISSÃO DE AR AMBIENTAL',
+    causeResult: 'C/R',
+    pillar: 'ENV',
+    unit: 'kg',
+    description: 'Emissões de gases refrigerantes (R134a, R404a) e pegada de carbono',
+    wcmType: 'Consumíveis',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: true, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+
+  // 4.5 - EFLUENTES LÍQUIDOS AMBIENTAIS
+  {
+    id: 'loss_4_5_1',
+    code: '4.5.1',
+    name: 'ÁGUA RESIDUAL INDUSTRIAL (PROCESSO FÍSICO-QUÍMICO)',
+    lossType: '04. MEIO AMBIENTE',
+    category: '4.5 - EFLUENTES LÍQUIDOS AMBIENTAIS',
+    causeResult: 'C/R',
+    pillar: 'ENV',
+    unit: 'm³',
+    description: 'Volume de efluente industrial enviado à estação de tratamento físico-química',
+    wcmType: 'Consumíveis',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: false, useElectricity: false, useWaterSteam: true, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_4_5_2',
+    code: '4.5.2',
+    name: 'ÁGUA RESIDUAL BIOLÓGICA',
+    lossType: '04. MEIO AMBIENTE',
+    category: '4.5 - EFLUENTES LÍQUIDOS AMBIENTAIS',
+    causeResult: 'C/R',
+    pillar: 'ENV',
+    unit: 'm³',
+    description: 'Efluente orgânico de fermentação de biorreatores exigindo tratamento biológico',
+    wcmType: 'Consumíveis',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: false, useElectricity: false, useWaterSteam: true, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_4_5_3',
+    code: '4.5.3',
+    name: 'ÁGUA PLUVIAL (ÁGUA DA CHUVA)',
+    lossType: '04. MEIO AMBIENTE',
+    category: '4.5 - EFLUENTES LÍQUIDOS AMBIENTAIS',
+    causeResult: 'C/R',
+    pillar: 'ENV',
+    unit: 'm³',
+    description: 'Drenagem, contenção e monitoramento de galerias pluviais da fábrica',
+    wcmType: 'Consumíveis',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: false, useElectricity: false, useWaterSteam: true, useMaintenance: false, customMultiplier: 1.0 },
+  },
+
+  // 4.6 - PREVENÇÃO AMBIENTAL
+  {
+    id: 'loss_4_6_1',
+    code: '4.6.1',
+    name: 'PREVENÇÃO AMBIENTAL',
+    lossType: '04. MEIO AMBIENTE',
+    category: '4.6 - PREVENÇÃO AMBIENTAL',
+    causeResult: 'C/R',
+    pillar: 'ENV',
+    unit: 'horas',
+    description: 'Auditorias, simulados, monitoramento e certificações ambientais ISO 14001',
+    wcmType: 'Consumíveis',
+    costDrivers: { useLabor: true, useMachineOverhead: false, useMaterial: false, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+
+  // 4.7 - GESTÃO DE EMERGÊNCIAS AMBIENTAIS
+  {
+    id: 'loss_4_7_1',
+    code: '4.7.1',
+    name: 'GERENCIAMENTO DE EMERGÊNCIAS AMBIENTAIS',
+    lossType: '04. MEIO AMBIENTE',
+    category: '4.7 - GESTÃO DE EMERGÊNCIAS AMBIENTAIS',
+    causeResult: 'C/R',
+    pillar: 'ENV',
+    unit: 'horas',
+    description: 'Ações de contingência para vazamentos acidentais ou contenção de drenos',
+    wcmType: 'Consumíveis',
+    costDrivers: { useLabor: true, useMachineOverhead: false, useMaterial: true, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+
+  // 05. ENERGIA
+  // 5.1 - ENERGIA ELÉTRICA
+  {
+    id: 'loss_5_1_1',
+    code: '5.1.1',
+    name: 'CONSUMO DE ENERGIA',
+    lossType: '05. ENERGIA',
+    category: '5.1 - ENERGIA ELÉTRICA',
+    causeResult: 'C',
+    pillar: 'ENV',
+    unit: 'kWh',
+    description: 'Consumo fora do padrão teórico em motores, bombas e linhas produtivas',
+    wcmType: 'Energia',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: false, useElectricity: true, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_5_1_2',
+    code: '5.1.2',
+    name: 'VAZAMENTO DE AR COMPRIMIDO',
+    lossType: '05. ENERGIA',
+    category: '5.1 - ENERGIA ELÉTRICA',
+    causeResult: 'C',
+    pillar: 'ENV',
+    unit: 'kWh',
+    description: 'Vazamentos em mangueiras, conexões pneumáticas e pistões em operação',
+    wcmType: 'Energia',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: false, useElectricity: true, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_5_1_3',
+    code: '5.1.3',
+    name: 'ILUMINAÇÃO (GERAL)',
+    lossType: '05. ENERGIA',
+    category: '5.1 - ENERGIA ELÉTRICA',
+    causeResult: 'C',
+    pillar: 'ENV',
+    unit: 'kWh',
+    description: 'Luminárias acesas em setores sem atividade ou fora de horário',
+    wcmType: 'Energia',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: false, useElectricity: true, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_5_1_5',
+    code: '5.1.5',
+    name: 'ILUMINAÇÃO (PRODUÇÃO)',
+    lossType: '05. ENERGIA',
+    category: '5.1 - ENERGIA ELÉTRICA',
+    causeResult: 'C',
+    pillar: 'ENV',
+    unit: 'kWh',
+    description: 'Eficiência e adequação do parque luminotécnico sobre os equipamentos',
+    wcmType: 'Energia',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: false, useElectricity: true, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_5_1_6',
+    code: '5.1.6',
+    name: 'REFRIGERAÇÃO (GERAL)',
+    lossType: '05. ENERGIA',
+    category: '5.1 - ENERGIA ELÉTRICA',
+    causeResult: 'C',
+    pillar: 'ENV',
+    unit: 'kWh',
+    description: 'Carga térmica em chillers e torres de resfriamento para utilidades',
+    wcmType: 'Energia',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: false, useElectricity: true, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_5_1_7',
+    code: '5.1.7',
+    name: 'PROCESSO DE REFRIGERAÇÃO (HVAC)',
+    lossType: '05. ENERGIA',
+    category: '5.1 - ENERGIA ELÉTRICA',
+    causeResult: 'C',
+    pillar: 'ENV',
+    unit: 'kWh',
+    description: 'Controle de umidade e temperatura em salas limpas classe ISO e câmaras frias',
+    wcmType: 'Energia',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: false, useElectricity: true, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_5_1_8',
+    code: '5.1.8',
+    name: 'AR CONDICIONADO DE REFRIGERAÇÃO (RIZOTEC)',
+    lossType: '05. ENERGIA',
+    category: '5.1 - ENERGIA ELÉTRICA',
+    causeResult: 'C',
+    pillar: 'ENV',
+    unit: 'kWh',
+    description: 'Sistemas de climatização especializada para bioculturas e equipamentos sensíveis',
+    wcmType: 'Energia',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: false, useElectricity: true, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_5_1_9',
+    code: '5.1.9',
+    name: 'AQUECIMENTO (ELÉTRICO)',
+    lossType: '05. ENERGIA',
+    category: '5.1 - ENERGIA ELÉTRICA',
+    causeResult: 'C',
+    pillar: 'ENV',
+    unit: 'kWh',
+    description: 'Resistências elétricas de pré-aquecimento e mantas térmicas de biorreatores',
+    wcmType: 'Energia',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: false, useElectricity: true, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_5_1_10',
+    code: '5.1.10',
+    name: 'PRODUÇÃO DE VAPOR',
+    lossType: '05. ENERGIA',
+    category: '5.1 - ENERGIA ELÉTRICA',
     causeResult: 'C',
     pillar: 'ENV',
     unit: 'm³',
-    description: 'Perdas em purgadores de vapor limpo e água purificada para injetáveis (WFI)',
+    description: 'Perdas térmicas e rendimento de caldeiras e geradores de vapor puro',
     wcmType: 'Energia',
-    costDrivers: {
-      useLabor: false,
-      useMachineOverhead: false,
-      useMaterial: false,
-      useElectricity: false,
-      useWaterSteam: true,
-      useMaintenance: false,
-      customMultiplier: 1.0,
-    },
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: false, useElectricity: true, useWaterSteam: true, useMaintenance: false, customMultiplier: 1.0 },
+  },
+
+  // 06. LOGÍSTICA
+  // 6.1 - PERDA DE MANUSEIO DE MATERIAIS
+  {
+    id: 'loss_6_1_1',
+    code: '6.1.1',
+    name: 'TRANSPORTE S/ EQUIPAMENTO',
+    lossType: '06. LOGÍSTICA',
+    category: '6.1 - PERDA DE MANUSEIO DE MATERIAIS',
+    causeResult: 'C/R',
+    pillar: 'LOG',
+    unit: 'horas',
+    description: 'Transporte manual de embalagens e matérias-primas sem carrinho ou esteira',
+    wcmType: 'Performance',
+    costDrivers: { useLabor: true, useMachineOverhead: false, useMaterial: false, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_6_1_2',
+    code: '6.1.2',
+    name: 'TRANSPORTE C/ EQUIPAMENTO',
+    lossType: '06. LOGÍSTICA',
+    category: '6.1 - PERDA DE MANUSEIO DE MATERIAIS',
+    causeResult: 'C/R',
+    pillar: 'LOG',
+    unit: 'horas',
+    description: 'Movimentações com empilhadeiras, transpaleteiras e tempo de transporte motorizado',
+    wcmType: 'Performance',
+    costDrivers: { useLabor: true, useMachineOverhead: true, useMaterial: false, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_6_1_3',
+    code: '6.1.3',
+    name: 'REEMBALAGEM',
+    lossType: '06. LOGÍSTICA',
+    category: '6.1 - PERDA DE MANUSEIO DE MATERIAIS',
+    causeResult: 'C/R',
+    pillar: 'LOG',
+    unit: 'horas',
+    description: 'Horas reempacotando caixas danificadas ou trocando paletização no fluxo logístico',
+    wcmType: 'Performance',
+    costDrivers: { useLabor: true, useMachineOverhead: false, useMaterial: true, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_6_1_4',
+    code: '6.1.4',
+    name: 'EQUIPAMENTO',
+    lossType: '06. LOGÍSTICA',
+    category: '6.1 - PERDA DE MANUSEIO DE MATERIAIS',
+    causeResult: 'R',
+    pillar: 'LOG',
+    unit: 'horas',
+    description: 'Falta ou quebra de equipamentos de movimentação (baterias, esteiras, empilhadeiras)',
+    wcmType: 'Disponibilidade',
+    costDrivers: { useLabor: true, useMachineOverhead: true, useMaterial: false, useElectricity: false, useWaterSteam: false, useMaintenance: true, customMultiplier: 1.0 },
+  },
+
+  // 6.2 - PERDA DE INVENTÁRIO
+  {
+    id: 'loss_6_2_1',
+    code: '6.2.1',
+    name: 'INVENTÁRIO DE MATERIAL DIRETO',
+    lossType: '06. LOGÍSTICA',
+    category: '6.2 - PERDA DE INVENTÁRIO',
+    causeResult: 'C/R',
+    pillar: 'LOG',
+    unit: 'unidades',
+    description: 'Diferenças de estoque e matéria-prima vencida ou estocada em excesso',
+    wcmType: 'Performance',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: true, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_6_2_2',
+    code: '6.2.2',
+    name: 'INVENTÁRIO DE MATERIAL INDIRETO',
+    lossType: '06. LOGÍSTICA',
+    category: '6.2 - PERDA DE INVENTÁRIO',
+    causeResult: 'C/R',
+    pillar: 'LOG',
+    unit: 'unidades',
+    description: 'Capital imobilizado e divergências em almoxarifado de peças e consumíveis',
+    wcmType: 'Performance',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: true, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_6_2_3',
+    code: '6.2.3',
+    name: 'INVENTÁRIO DE PRODUTO ACABADO',
+    lossType: '06. LOGÍSTICA',
+    category: '6.2 - PERDA DE INVENTÁRIO',
+    causeResult: 'C/R',
+    pillar: 'LOG',
+    unit: 'unidades',
+    description: 'Excesso de produto pronto retido por lote pendente ou atraso de despacho',
+    wcmType: 'Performance',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: true, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+
+  // 6.3 - PERDA DE ESPAÇO
+  {
+    id: 'loss_6_3_1',
+    code: '6.3.1',
+    name: 'ESPAÇO PARA MATERIAL DIRETO E INDIRETO',
+    lossType: '06. LOGÍSTICA',
+    category: '6.3 - PERDA DE ESPAÇO',
+    causeResult: 'C/R',
+    pillar: 'LOG',
+    unit: 'unidades',
+    description: 'Área fabril ocupada por pallets e bombonas de matéria-prima fora do layout ótimo',
+    wcmType: 'Performance',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: false, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_6_3_2',
+    code: '6.3.2',
+    name: 'ESPAÇO PARA PRODUTOS ACABADOS',
+    lossType: '06. LOGÍSTICA',
+    category: '6.3 - PERDA DE ESPAÇO',
+    causeResult: 'C/R',
+    pillar: 'LOG',
+    unit: 'unidades',
+    description: 'Congestionamento de corredores e expedição aguardando transporte',
+    wcmType: 'Performance',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: false, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
+  },
+  {
+    id: 'loss_6_3_3',
+    code: '6.3.3',
+    name: 'ESPAÇO PARA TRANSPORTE',
+    lossType: '06. LOGÍSTICA',
+    category: '6.3 - PERDA DE ESPAÇO',
+    causeResult: 'C/R',
+    pillar: 'LOG',
+    unit: 'unidades',
+    description: 'Área de docas, baías de carregamento e circulação ociosa ou bloqueada',
+    wcmType: 'Performance',
+    costDrivers: { useLabor: false, useMachineOverhead: false, useMaterial: false, useElectricity: false, useWaterSteam: false, useMaintenance: false, customMultiplier: 1.0 },
   },
 ];
 
@@ -501,6 +1214,124 @@ export const INITIAL_ROOT_CAUSES: RootCause[] = [
     description: 'Perda de calor em linhas de vapor puro e condensado sem retorno',
   },
 ];
+
+// Mapeamento dos valores da tabela WCM fornecida para os 6 equipamentos:
+// [proc_1 (Quality), proc_2 (Tecnor), proc_3 (T100), proc_4 (T500), proc_5 (T3000), proc_6 (T5000)]
+const NEW_MATRIX_A_DATA: { lossId: string; vals: [number, number, number, number, number, number] }[] = [
+  // 2.1 - TEMPO PERDIDO DE PRODUÇÃO
+  { lossId: 'loss_2_1_1', vals: [2, 1, 1, 1, 1, 1] }, // 2.1.1 - NVAA - TRABALHO EXTRA
+  { lossId: 'loss_2_1_2', vals: [1, 1, 1, 1, 1, 1] }, // 2.1.2 - NVAA - OPERADOR EM MOVIMENTO
+
+  // 2.2 - ORGANIZAÇÃO DA LINHA
+  { lossId: 'loss_2_2_1', vals: [3, 3, 2, 2, 2, 2] }, // 2.2.1 - NVAA - OPERADOR MANUSEANDO MATERIAL
+  { lossId: 'loss_2_2_2', vals: [3, 1, 3, 3, 3, 3] }, // 2.2.2 - NVAA - OPERADOR AGUARDANDO
+  { lossId: 'loss_2_2_3', vals: [1, 1, 1, 1, 1, 1] }, // 2.2.3 - NVAA - DESBALANCEAMENTO
+
+  // 2.3 - QUALIDADE
+  { lossId: 'loss_2_3_1', vals: [2, 2, 2, 2, 2, 2] }, // 2.3.1 - CHECAGEM DE QUALIDADE
+  { lossId: 'loss_2_3_2', vals: [1, 1, 3, 3, 3, 3] }, // 2.3.2 - CONTROLE DE QUALIDADE
+
+  // 2.4 - EFICIÊNCIA DA ÁREA
+  { lossId: 'loss_2_4_1', vals: [1, 1, 1, 1, 1, 1] }, // 2.4.1 - GESTÃO
+  { lossId: 'loss_2_4_2', vals: [3, 1, 3, 3, 3, 3] }, // 2.4.2 - HORA EXTRA
+  { lossId: 'loss_2_4_3', vals: [1, 1, 1, 1, 1, 1] }, // 2.4.3 - ABSENTEÍSMO
+  { lossId: 'loss_2_4_4', vals: [1, 1, 2, 2, 2, 2] }, // 2.4.4 - EFICIÊNCIA OPERACIONAL
+  { lossId: 'loss_2_4_5', vals: [1, 1, 2, 2, 2, 2] }, // 2.4.5 - TREINAMENTO & REUNIÃO
+  { lossId: 'loss_2_4_6', vals: [2, 3, 2, 2, 2, 2] }, // 2.4.6 - ATIVIDADES AUTÔNOMAS
+
+  // 2.5 - DEFEITO LABORAL
+  { lossId: 'loss_2_5_1', vals: [1, 1, 2, 2, 2, 2] }, // 2.5.1 - SUCATA
+  { lossId: 'loss_2_5_2', vals: [1, 2, 1, 1, 1, 1] }, // 2.5.2 - RETRABALHO
+
+  // 2.6 - OPORTUNIDADE DE TRABALHO
+  { lossId: 'loss_2_6_1', vals: [1, 1, 2, 2, 2, 2] }, // 2.6.1 - OPORTUNIDADE DE TRABALHO
+
+  // 2.7 - PERDA DE MANUTENÇÃO
+  { lossId: 'loss_2_7_1', vals: [1, 2, 1, 1, 1, 1] }, // 2.7.1 - LIMPEZA ESPECIALIZADA
+  { lossId: 'loss_2_7_2', vals: [1, 1, 1, 1, 1, 1] }, // 2.7.2 - LIMPEZA COMUM
+
+  // 2.8 - GESTÃO E PERDA ADMINISTRATIVA
+  { lossId: 'loss_2_8_1', vals: [2, 2, 2, 2, 2, 2] }, // 2.8.1 - GESTÃO DA PRODUÇÃO E ADMINISTRAÇÃO
+
+  // 03. MATERIAL
+  // 3.1 - MATERIAL DIRETO
+  { lossId: 'loss_3_1_1', vals: [0, 0, 0, 0, 0, 0] }, // 3.1.1 - SUCATA
+  { lossId: 'loss_3_1_2', vals: [0, 0, 0, 0, 0, 0] }, // 3.1.2 - RETRABALHO
+
+  // 3.2 - MATERIAL INDIRETO
+  { lossId: 'loss_3_2_1', vals: [0, 0, 0, 0, 0, 0] }, // 3.2.1 - MATERIAL DE CONSUMO
+  { lossId: 'loss_3_2_2', vals: [0, 0, 0, 0, 0, 0] }, // 3.2.2 - PEÇA DE MANUTENÇÃO
+  { lossId: 'loss_3_2_3', vals: [0, 0, 0, 0, 0, 0] }, // 3.2.3 - EPI
+
+  // 04. MEIO AMBIENTE
+  // 4.1 - RESÍDUOS AMBIENTAIS
+  { lossId: 'loss_4_1_1', vals: [1, 3, 1, 1, 1, 1] }, // 4.1.1 - RESÍDUOS RECICLADOS
+  { lossId: 'loss_4_1_2', vals: [1, 1, 1, 1, 1, 1] }, // 4.1.2 - MANEJO DE RESÍDUOS
+  { lossId: 'loss_4_1_3', vals: [1, 1, 1, 1, 1, 1] }, // 4.1.3 - UTILIDADES DE RESÍDUOS
+
+  // 4.2 - QUÍMICOS AMBIENTAIS
+  { lossId: 'loss_4_2_1', vals: [1, 1, 1, 1, 1, 1] }, // 4.2.1 - ÓLEOS LUBRIFICANTES
+  { lossId: 'loss_4_2_2', vals: [1, 1, 1, 1, 1, 1] }, // 4.2.2 - ÓLEOS HIDRÁULICOS
+  { lossId: 'loss_4_2_3', vals: [3, 1, 3, 3, 3, 3] }, // 4.2.3 - PRODUTOS QUÍMICOS DE LAVAGEM
+  { lossId: 'loss_4_2_4', vals: [3, 1, 3, 3, 3, 3] }, // 4.2.4 - PRODUTOS QUÍMICOS PARA TRATAMENTO DE ÁGUA DE ENTRADA
+
+  // 4.3 - ÁGUA AMBIENTAL
+  { lossId: 'loss_4_3_1', vals: [3, 1, 3, 3, 3, 3] }, // 4.3.1 - ÁGUA NO LOCAL
+
+  // 4.4 - EMISSÃO DE AR AMBIENTAL
+  { lossId: 'loss_4_4_1', vals: [1, 1, 1, 1, 1, 1] }, // 4.4.1 - CONTROLE DE EMISSÕES ATMOSFÉRICAS
+  { lossId: 'loss_4_4_2', vals: [1, 1, 1, 1, 1, 1] }, // 4.4.2 - CONTROLE DE GEE (GASES DE EFEITO ESTUFA)
+
+  // 4.5 - EFLUENTES LÍQUIDOS AMBIENTAIS
+  { lossId: 'loss_4_5_1', vals: [1, 1, 1, 1, 1, 1] }, // 4.5.1 - ÁGUA RESIDUAL INDUSTRIAL (PROCESSO FÍSICO-QUÍMICO)
+  { lossId: 'loss_4_5_2', vals: [3, 1, 3, 3, 3, 3] }, // 4.5.2 - ÁGUA RESIDUAL BIOLÓGICA
+  { lossId: 'loss_4_5_3', vals: [1, 1, 1, 1, 1, 1] }, // 4.5.3 - ÁGUA PLUVIAL (ÁGUA DA CHUVA)
+
+  // 4.6 - PREVENÇÃO AMBIENTAL
+  { lossId: 'loss_4_6_1', vals: [1, 1, 1, 1, 1, 1] }, // 4.6.1 - PREVENÇÃO AMBIENTAL
+
+  // 4.7 - GESTÃO DE EMERGÊNCIAS AMBIENTAIS
+  { lossId: 'loss_4_7_1', vals: [1, 1, 1, 1, 1, 1] }, // 4.7.1 - GERENCIAMENTO DE EMERGÊNCIAS AMBIENTAIS
+
+  // 05. ENERGIA
+  // 5.1 - ENERGIA ELÉTRICA
+  { lossId: 'loss_5_1_1', vals: [1, 1, 1, 1, 1, 1] }, // 5.1.1 - CONSUMO DE ENERGIA
+  { lossId: 'loss_5_1_2', vals: [2, 2, 2, 2, 2, 2] }, // 5.1.2 - VAZAMENTO DE AR COMPRIMIDO
+  { lossId: 'loss_5_1_3', vals: [1, 1, 1, 1, 1, 1] }, // 5.1.3 - ILUMINAÇÃO (GERAL)
+  { lossId: 'loss_5_1_5', vals: [1, 1, 1, 1, 1, 1] }, // 5.1.5 - ILUMINAÇÃO (PRODUÇÃO)
+  { lossId: 'loss_5_1_6', vals: [2, 2, 2, 2, 2, 2] }, // 5.1.6 - REFRIGERAÇÃO (GERAL)
+  { lossId: 'loss_5_1_7', vals: [2, 2, 2, 2, 2, 2] }, // 5.1.7 - PROCESSO DE REFRIGERAÇÃO (HVAC)
+  { lossId: 'loss_5_1_8', vals: [1, 1, 1, 1, 1, 1] }, // 5.1.8 - AR CONDICIONADO DE REFRIGERAÇÃO (RIZOTEC)
+  { lossId: 'loss_5_1_9', vals: [1, 1, 1, 1, 1, 1] }, // 5.1.9 - AQUECIMENTO (ELÉTRICO)
+  { lossId: 'loss_5_1_10', vals: [1, 1, 1, 1, 1, 1] }, // 5.1.10 - PRODUÇÃO DE VAPOR
+
+  // 06. LOGÍSTICA
+  // 6.1 - PERDA DE MANUSEIO DE MATERIAIS
+  { lossId: 'loss_6_1_1', vals: [1, 1, 1, 1, 1, 1] }, // 6.1.1 - TRANSPORTE S/ EQUIPAMENTO
+  { lossId: 'loss_6_1_2', vals: [1, 1, 1, 1, 1, 1] }, // 6.1.2 - TRANSPORTE C/ EQUIPAMENTO
+  { lossId: 'loss_6_1_3', vals: [1, 3, 1, 1, 1, 1] }, // 6.1.3 - REEMBALAGEM
+  { lossId: 'loss_6_1_4', vals: [1, 1, 1, 1, 1, 1] }, // 6.1.4 - EQUIPAMENTO
+
+  // 6.2 - PERDA DE INVENTÁRIO
+  { lossId: 'loss_6_2_1', vals: [1, 1, 1, 1, 1, 1] }, // 6.2.1 - INVENTÁRIO DE MATERIAL DIRETO
+  { lossId: 'loss_6_2_2', vals: [1, 1, 1, 1, 1, 1] }, // 6.2.2 - INVENTÁRIO DE MATERIAL INDIRETO
+  { lossId: 'loss_6_2_3', vals: [1, 1, 1, 1, 1, 1] }, // 6.2.3 - INVENTÁRIO DE PRODUTO ACABADO
+
+  // 6.3 - PERDA DE ESPAÇO
+  { lossId: 'loss_6_3_1', vals: [1, 1, 1, 1, 1, 1] }, // 6.3.1 - ESPAÇO PARA MATERIAL DIRETO E INDIRETO
+  { lossId: 'loss_6_3_2', vals: [1, 1, 1, 1, 1, 1] }, // 6.3.2 - ESPAÇO PARA PRODUTOS ACABADOS
+  { lossId: 'loss_6_3_3', vals: [1, 1, 1, 1, 1, 1] }, // 6.3.3 - ESPAÇO PARA TRANSPORTE
+];
+
+const WCM_PROCESS_IDS = ['proc_1', 'proc_2', 'proc_3', 'proc_4', 'proc_5', 'proc_6'];
+
+const ADDITIONAL_MATRIX_A_CELLS: MatrixACell[] = NEW_MATRIX_A_DATA.flatMap(({ lossId, vals }) =>
+  WCM_PROCESS_IDS.map((processId, idx) => ({
+    processId,
+    lossId,
+    value: vals[idx] ?? 0,
+  }))
+);
 
 // Initial Matrix A values - Matching exactly the user's sample table
 // 1 = Verde (Baixo impacto), 2 = Amarelo (Médio impacto), 3 = Vermelho (Alto impacto / Crítico)
@@ -617,37 +1448,8 @@ export const INITIAL_MATRIX_A_VALUES: MatrixACell[] = [
   { processId: 'proc_5', lossId: 'loss_1_3_2', value: 2 },
   { processId: 'proc_6', lossId: 'loss_1_3_2', value: 2 },
 
-  // 2.1.1 - MOVIMENTAÇÃO EXCESSIVA
-  { processId: 'proc_1', lossId: 'loss_2_1_1', value: 2 },
-  { processId: 'proc_2', lossId: 'loss_2_1_1', value: 2 },
-  { processId: 'proc_3', lossId: 'loss_2_1_1', value: 1 },
-  { processId: 'proc_4', lossId: 'loss_2_1_1', value: 1 },
-  { processId: 'proc_5', lossId: 'loss_2_1_1', value: 1 },
-  { processId: 'proc_6', lossId: 'loss_2_1_1', value: 1 },
-
-  // 2.1.2 - FALTA DE BALANCEAMENTO
-  { processId: 'proc_1', lossId: 'loss_2_1_2', value: 1 },
-  { processId: 'proc_2', lossId: 'loss_2_1_2', value: 2 },
-  { processId: 'proc_3', lossId: 'loss_2_1_2', value: 1 },
-  { processId: 'proc_4', lossId: 'loss_2_1_2', value: 1 },
-  { processId: 'proc_5', lossId: 'loss_2_1_2', value: 1 },
-  { processId: 'proc_6', lossId: 'loss_2_1_2', value: 1 },
-
-  // 4.1.1 - CONSUMO ENERGIA
-  { processId: 'proc_1', lossId: 'loss_4_1_1', value: 1 },
-  { processId: 'proc_2', lossId: 'loss_4_1_1', value: 1 },
-  { processId: 'proc_3', lossId: 'loss_4_1_1', value: 2 },
-  { processId: 'proc_4', lossId: 'loss_4_1_1', value: 2 },
-  { processId: 'proc_5', lossId: 'loss_4_1_1', value: 2 },
-  { processId: 'proc_6', lossId: 'loss_4_1_1', value: 2 },
-
-  // 4.1.2 - VAZAMENTO VAPOR / ÁGUA
-  { processId: 'proc_1', lossId: 'loss_4_1_2', value: 1 },
-  { processId: 'proc_2', lossId: 'loss_4_1_2', value: 1 },
-  { processId: 'proc_3', lossId: 'loss_4_1_2', value: 2 },
-  { processId: 'proc_4', lossId: 'loss_4_1_2', value: 2 },
-  { processId: 'proc_5', lossId: 'loss_4_1_2', value: 2 },
-  { processId: 'proc_6', lossId: 'loss_4_1_2', value: 2 },
+  // Matriz A com valores completos das novas categorias WCM:
+  ...ADDITIONAL_MATRIX_A_CELLS,
 ];
 
 export const INITIAL_MATRIX_B_VALUES: MatrixBCell[] = [
@@ -860,6 +1662,24 @@ export const INITIAL_CAUSAL_DEPLOYMENTS: CausalDeployment[] = [
     pillar: 'ENV',
     category: 'Eficiência Térmica & Utilidades',
     notes: 'Válvula redutora de vapor descalibrada aumenta tempo de esterilização térmica',
+    costElements: [
+      {
+        id: 'elem_mo_3',
+        name: 'Custo Mão de Obra',
+        rate: 85,
+        unit: 'reais_hora',
+        unitDetail: 'R$/hora por operador',
+        isActive: true,
+      },
+      {
+        id: 'elem_ee_3',
+        name: 'Custo Energia Elétrica',
+        rate: 0.95,
+        unit: 'reais_hora',
+        unitDetail: 'R$/hora processo',
+        isActive: true,
+      },
+    ],
     impactedStages: [
       {
         id: 'stg_3_1',
@@ -888,6 +1708,24 @@ export const INITIAL_CAUSAL_DEPLOYMENTS: CausalDeployment[] = [
     pillar: 'FI',
     category: 'Regulagem & Setup Rápido (SMED)',
     notes: 'Troca de formato de frasco sem gabarito fixo gera tentativas e micro-ajustes',
+    costElements: [
+      {
+        id: 'elem_mo_4',
+        name: 'Custo Mão de Obra',
+        rate: 85,
+        unit: 'reais_hora',
+        unitDetail: 'R$/hora por operador',
+        isActive: true,
+      },
+      {
+        id: 'elem_ee_4',
+        name: 'Custo Energia Elétrica',
+        rate: 0.95,
+        unit: 'reais_hora',
+        unitDetail: 'R$/hora processo',
+        isActive: true,
+      },
+    ],
     impactedStages: [
       {
         id: 'stg_4_1',
@@ -916,6 +1754,24 @@ export const INITIAL_CAUSAL_DEPLOYMENTS: CausalDeployment[] = [
     pillar: 'QC',
     category: 'Garantia da Qualidade & Assepsia',
     notes: 'O-ring com microfissura permitiu perda de esterilidade durante a transferência',
+    costElements: [
+      {
+        id: 'elem_mo_5',
+        name: 'Custo Mão de Obra',
+        rate: 85,
+        unit: 'reais_hora',
+        unitDetail: 'R$/hora por operador',
+        isActive: true,
+      },
+      {
+        id: 'elem_ee_5',
+        name: 'Custo Energia Elétrica',
+        rate: 0.95,
+        unit: 'reais_hora',
+        unitDetail: 'R$/hora processo',
+        isActive: true,
+      },
+    ],
     impactedStages: [
       {
         id: 'stg_5_1',
